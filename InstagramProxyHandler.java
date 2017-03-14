@@ -78,6 +78,8 @@ public class InstagramProxyHandler implements Runnable {
 					out.println(pic.optString("caption"));
 				}
 				out.println(dateify(pic.getInt("date")));
+				out.flush();
+				downloadAndPrintPic(pic.getString("display_src"), out);
 				out.println("Press Enter to continue.");
 	}
 	private static JSONArray getFeedForUser(String username, PrintWriter out) throws Exception {
@@ -149,5 +151,36 @@ public class InstagramProxyHandler implements Runnable {
 		}
 		if (difference < 0) b.append("ago");
 		return b.toString();
+	}
+	private static void downloadAndPrintPic(String url, PrintWriter out) throws Exception {
+		Process proc = Runtime.getRuntime().exec(new String[]{"jp2a", "--height=10", "-"});
+		OutputStream os = null;
+		InputStream pis = null;
+		byte[] buf = new byte[0x1000];
+		int len;
+		try {
+			pis = new URL(url).openStream();
+			os = proc.getOutputStream();
+			while ((len = pis.read(buf)) > 0) {
+				os.write(buf, 0, len);
+			}
+		} finally {
+			if (os != null) os.close();
+			if (pis != null) pis.close();
+		}
+		proc.waitFor();
+		InputStream is = null;
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		try {
+			is = proc.getInputStream();
+			while ((len = is.read(buf)) > 0) {
+				bos.write(buf, 0, len);
+			}
+			out.print(bos.toString("UTF-8"));
+		} finally {
+			if (is != null) {
+				is.close();
+			}
+		}
 	}
 }

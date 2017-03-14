@@ -42,6 +42,10 @@ class InviteResponder implements Runnable {
 					if (buf[endi] == 0) break;
 				}
 				String name = new String(buf, 0x38, endi - 0x38, utf8Charset);
+				for (endi = 0x38 + 12; endi < 0x38 + 12 + 16; endi++) {
+					if (buf[endi] == 0) break;
+				}
+				name += new String(buf, 0x38 + 12, endi - 0x38 - 12, utf8Charset);
 				int port = listener.onConnectionRequested(name);
 				outBuf[10] = (byte)((port >> 8) & 0xff);
 				outBuf[11] = (byte)(port & 0xff);
